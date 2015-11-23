@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using System.Threading.Tasks;
 using Adaptive.ReactiveTrader.Contract.Events;
@@ -17,6 +17,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
 
         private IEventStoreConnection _conn;
         private EventStoreAllCatchUpSubscription _subscription;
+        private IActorRef _cacheActor;
 
         public EventStoreActor()
         {
@@ -28,12 +29,14 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
         private void GetTrades()
         {
             Console.WriteLine("Subscribing to all event store events");
+            _cacheActor = Context.Sender;
+
             _subscription = _conn.SubscribeToAllFrom(Position.Start, false, OnEventAppeared, OnCaughtUp);
         }
 
         private void OnCaughtUp(EventStoreCatchUpSubscription obj)
         {
-            Context.Sender.Tell(new BlotterEndOfSotwMessage());
+            _cacheActor.Tell(new BlotterEndOfSotwMessage());
         }
 
         private void OnEventAppeared(EventStoreCatchUpSubscription eventStoreCatchUpSubscription,
@@ -44,13 +47,16 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
                 default:
                     return;
                 case TradeCreatedEvent:
-                    Context.Sender.Tell(GetEvent<TradeCreatedEvent>(resolvedEvent.Event));
+                    //Console.WriteLine("Trade created event appeared: " + resolvedEvent.Event.EventId);
+                    _cacheActor.Tell(GetEvent<TradeCreatedEvent>(resolvedEvent.Event));
                     break;
                 case TradeCompletedEvent:
-                    Context.Sender.Tell(GetEvent<TradeCompletedEvent>(resolvedEvent.Event));
+                    //Console.WriteLine("Trade completed event appeared: " + resolvedEvent.Event.EventId);
+                    _cacheActor.Tell(GetEvent<TradeCompletedEvent>(resolvedEvent.Event));
                     break;
                 case TradeRejectedEvent:
-                    Context.Sender.Tell(GetEvent<TradeRejectedEvent>(resolvedEvent.Event));
+                    //Console.WriteLine("Trade rejected event appeared: " + resolvedEvent.Event.EventId);
+                    _cacheActor.Tell(GetEvent<TradeRejectedEvent>(resolvedEvent.Event));
                     break;
             }
         }
