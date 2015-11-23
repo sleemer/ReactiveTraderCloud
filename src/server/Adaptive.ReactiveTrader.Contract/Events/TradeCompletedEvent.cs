@@ -1,4 +1,4 @@
-﻿namespace Adaptive.ReactiveTrader.Server.Blotter
+﻿namespace Adaptive.ReactiveTrader.Contract.Events
 {
     public class TradeCompletedEvent
     {
