@@ -9,8 +9,6 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
             var system = ActorSystem.Create("BlotterService");
 
             var bootstrapActor = system.ActorOf<BootstrapActor>();
-
-
         }
     }
 }

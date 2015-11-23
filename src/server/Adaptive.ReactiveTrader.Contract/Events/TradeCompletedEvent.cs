@@ -2,9 +2,9 @@
 {
     public class TradeCompletedEvent
     {
-        public int TradeId { get; }
+        public long TradeId { get; }
 ​
-        public TradeCompletedEvent(int tradeId)
+        public TradeCompletedEvent(long tradeId)
         {
             TradeId = tradeId;
         }

@@ -1,4 +1,6 @@
 ﻿using System.Threading.Tasks;
+using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
+using Adaptive.ReactiveTrader.Server.Blotter.TradeCache;
 using Akka.Actor;
 
 namespace Adaptive.ReactiveTrader.Server.Blotter
@@ -14,28 +16,13 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
 
             _eventStoreActor = Context.ActorOf<EventStoreActor>();
             
-
             _eventStoreActor.Tell(new ConnectMessage(), Self);
         }
 
         private void OnEventStoreActorConnected()
         {
-            _blotterCacheActor = Context.ActorOf<BlotterCacheActor>();
+            _blotterCacheActor = Context.ActorOf<TradeCacheActor>();
             _blotterCacheActor.Tell(new WarmUpCacheMessage(_eventStoreActor));
-        }
-    }
-
-    internal class GetTradesMessage
-    {
-    }
-
-    public class WarmUpCacheMessage
-    {
-        public IActorRef EventStoreActorRef { get; }
-
-        public WarmUpCacheMessage(IActorRef eventStoreActorRef)
-        {
-            EventStoreActorRef = eventStoreActorRef;
         }
     }
 }
