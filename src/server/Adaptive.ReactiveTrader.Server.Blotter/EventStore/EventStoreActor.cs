@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Adaptive.ReactiveTrader.Contract.Events;
 using Adaptive.ReactiveTrader.Server.Blotter.TradeCache;
 using Akka.Actor;
+using Akka.Event;
 using EventStore.ClientAPI;
 using Newtonsoft.Json;
 
@@ -15,20 +16,21 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
         private const string TradeRejectedEvent = "TradeRejectedEvent";
         private const string TradeCreatedEvent = "TradeCreatedEvent";
 
+        private readonly ILoggingAdapter _log = Context.GetLogger();
         private IEventStoreConnection _conn;
         private EventStoreAllCatchUpSubscription _subscription;
         private IActorRef _cacheActor;
 
         public EventStoreActor()
         {
-            Console.WriteLine("Creating event store actor");
+            _log.Info("Creating event store actor");
             Receive<ConnectMessage>(async _ => {await Connect(); });
             Receive<GetTradesMessage>(_ => GetTrades());
         }
 
         private void GetTrades()
         {
-            Console.WriteLine("Subscribing to all event store events");
+            _log.Info("Subscribing to all event store events");
             _cacheActor = Context.Sender;
 
             _subscription = _conn.SubscribeToAllFrom(Position.Start, false, OnEventAppeared, OnCaughtUp);
@@ -47,15 +49,12 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
                 default:
                     return;
                 case TradeCreatedEvent:
-                    //Console.WriteLine("Trade created event appeared: " + resolvedEvent.Event.EventId);
                     _cacheActor.Tell(GetEvent<TradeCreatedEvent>(resolvedEvent.Event));
                     break;
                 case TradeCompletedEvent:
-                    //Console.WriteLine("Trade completed event appeared: " + resolvedEvent.Event.EventId);
                     _cacheActor.Tell(GetEvent<TradeCompletedEvent>(resolvedEvent.Event));
                     break;
                 case TradeRejectedEvent:
-                    //Console.WriteLine("Trade rejected event appeared: " + resolvedEvent.Event.EventId);
                     _cacheActor.Tell(GetEvent<TradeRejectedEvent>(resolvedEvent.Event));
                     break;
             }
@@ -63,7 +62,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
 
         private async Task Connect()
         {
-            Console.WriteLine("Connecting to event store...");
+            _log.Info("Connecting to event store...");
 
             var sender = Context.Sender;
 
@@ -73,7 +72,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
             _conn = EventStoreConnection.Create(connectionSettings, uri);
             await _conn.ConnectAsync();
 
-            Console.WriteLine("Connected to event store");
+            _log.Info("Connected to event store");
             sender.Tell(new ConnectedMessage(), Self);
         }
 

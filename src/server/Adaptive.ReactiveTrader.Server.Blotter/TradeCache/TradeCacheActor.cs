@@ -4,18 +4,20 @@ using Adaptive.ReactiveTrader.Contract;
 using Adaptive.ReactiveTrader.Contract.Events;
 using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
 using Akka.Actor;
+using Akka.Event;
 
 namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
 {
     public class TradeCacheActor : ReceiveActor
     {
+        private readonly ILoggingAdapter _log = Context.GetLogger();
         private TradeSubscriptionStates _tradeSubscriptionState = TradeSubscriptionStates.Unsubscribed;
 
         private readonly Dictionary<long, TradeDto> _trades = new Dictionary<long, TradeDto>();
 
         public TradeCacheActor()
         {
-            Console.WriteLine("Created trade cache actor");
+            _log.Info("Created trade cache actor");
             Receive<WarmUpCacheMessage>(msg => WarmUpCache(msg.EventStoreActorRef));
             // todo consider mapping to message
             Receive<TradeCreatedEvent>(e => OnTradeCreatedEvent(e));
@@ -26,25 +28,25 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
 
         private void WarmUpCache(IActorRef eventStoreActorRef)
         {
-            Console.WriteLine("Warming up trade cache");
+            _log.Info("Warming up trade cache");
             _tradeSubscriptionState = TradeSubscriptionStates.ReceivingSotw;
             eventStoreActorRef.Tell(new GetTradesMessage(), Self);
         }
 
         private void OnTradeCreatedEvent(TradeCreatedEvent tradeCreatedEvent)
         {
-            Console.WriteLine("Trade created: " + tradeCreatedEvent.TradeId);
+            _log.Info("Trade created: " + tradeCreatedEvent.TradeId);
             switch (_tradeSubscriptionState)
             {
                 case TradeSubscriptionStates.Unsubscribed:
-                    Console.WriteLine("Received created when unsubscribed");
+                    _log.Warning("Received created when unsubscribed");
                     break;
                 case TradeSubscriptionStates.ReceivingSotw:
                     AddTradeCreated(tradeCreatedEvent);
                     break;
                 case TradeSubscriptionStates.ReceivingUpdates:
                     AddTradeCreated(tradeCreatedEvent);
-                    Console.WriteLine("Publishing created trade");
+                    _log.Info("Publishing created trade");
                     // todo publish trade
                     break;
                 default:
@@ -54,24 +56,24 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
 
         private void OnTradeCompletedEvent(TradeCompletedEvent tradeCompletedEvent)
         {
-            Console.WriteLine("Trade completed: " + tradeCompletedEvent.TradeId);
+            _log.Info("Trade completed: " + tradeCompletedEvent.TradeId);
             HandleTradeStatusUpdate(tradeCompletedEvent.TradeId, TradeStatusDto.Done);
         }
 
         private void OnTradeRejectedEvent(TradeRejectedEvent tradeRejectedEvent)
         {
-            Console.WriteLine("Trade rejected: " + tradeRejectedEvent.TradeId);
+            _log.Info("Trade rejected: " + tradeRejectedEvent.TradeId);
             HandleTradeStatusUpdate(tradeRejectedEvent.TradeId, TradeStatusDto.Rejected);
         }
 
         private void OnBlotterEndOfSotw()
         {
-            Console.WriteLine("Blotter publishing sotw"); // todo
+            _log.Info("Blotter publishing sotw"); // todo
             _tradeSubscriptionState = TradeSubscriptionStates.ReceivingUpdates;
 
             foreach (var tradeDto in _trades)
             {
-                Console.WriteLine(tradeDto.ToString());
+                _log.Info(tradeDto.ToString());
             }
         }
 
@@ -80,14 +82,14 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             switch (_tradeSubscriptionState)
             {
                 case TradeSubscriptionStates.Unsubscribed:
-                    Console.WriteLine($"Received {status} trade when unsubscribed");
+                    _log.Warning($"Received {status} trade when unsubscribed");
                     break;
                 case TradeSubscriptionStates.ReceivingSotw:
                     SetTradeStatus(tradeId, status);
                     break;
                 case TradeSubscriptionStates.ReceivingUpdates:
                     SetTradeStatus(tradeId, status);
-                    Console.WriteLine($"Publishing {status} trade");
+                    _log.Info($"Publishing {status} trade");
                     // todo publish trade
                     break;
                 default:
@@ -104,7 +106,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             }
             else
             {
-                Console.WriteLine("Warning - received completed event for unknown trade: " + tradeId);
+                _log.Warning("Received completed event for unknown trade: " + tradeId);
             }
         }
 
@@ -114,7 +116,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             var key = dto.TradeId;
             if (_trades.ContainsKey(key))
             {
-                Console.WriteLine("Create trade - already has trade id: " + key);
+                _log.Warning("Create trade already has trade id: " + key);
             }
             _trades[key] = dto;
         }
