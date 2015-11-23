@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Adaptive.ReactiveTrader.Contract.Events;
 using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
 using Akka.Actor;
 

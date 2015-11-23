@@ -1,12 +1,12 @@
-﻿namespace Adaptive.ReactiveTrader.Contract.Events
+﻿namespace Adaptive.ReactiveTrader.Server.Blotter
 {
     public class TradeCompletedEvent
     {
-        public long TradeId { get; }
-​
         public TradeCompletedEvent(long tradeId)
         {
             TradeId = tradeId;
         }
+
+        public long TradeId { get; }
     }
 }

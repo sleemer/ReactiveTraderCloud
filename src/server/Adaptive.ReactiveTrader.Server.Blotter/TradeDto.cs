@@ -1,5 +1,4 @@
 using System;
-using Adaptive.ReactiveTrader.Contract.Events;
 
 namespace Adaptive.ReactiveTrader.Server.Blotter
 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using Adaptive.ReactiveTrader.Contract.Events;
 using Adaptive.ReactiveTrader.Server.Blotter.TradeCache;
 using Akka.Actor;
 using EventStore.ClientAPI;

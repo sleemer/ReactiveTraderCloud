@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Adaptive.ReactiveTrader.Contract.Events
+namespace Adaptive.ReactiveTrader.Server.Blotter
 {
     public class TradeCreatedEvent
     {
@@ -12,7 +12,7 @@ namespace Adaptive.ReactiveTrader.Contract.Events
         public DirectionDto Direction { get; }
         public int Notional { get; }
         public string DealtCurrency { get; }
-​
+
         public TradeCreatedEvent(long tradeId, string currencyPair, decimal spotRate, DateTime tradeDate, DateTime valueDate, DirectionDto direction, int notional, string dealtCurrency)
         {
             TradeId = tradeId;
@@ -24,11 +24,5 @@ namespace Adaptive.ReactiveTrader.Contract.Events
             Notional = notional;
             DealtCurrency = dealtCurrency;
         }
-    }
-
-    public enum DirectionDto
-    {
-        Buy,
-        Sell
     }
 }
