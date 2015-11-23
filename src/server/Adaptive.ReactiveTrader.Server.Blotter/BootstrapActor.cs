@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using System;
 using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
 using Adaptive.ReactiveTrader.Server.Blotter.TradeCache;
 using Akka.Actor;
@@ -13,9 +13,12 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
         public BootstrapActor()
         {
             Receive<ConnectedMessage>(_ => OnEventStoreActorConnected());
+            Receive<BootstrapMessage>(_ => Bootstrap());
+        }
 
+        private void Bootstrap()
+        {
             _eventStoreActor = Context.ActorOf<EventStoreActor>();
-            
             _eventStoreActor.Tell(new ConnectMessage(), Self);
         }
 

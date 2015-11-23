@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿using System;
+using Akka.Actor;
 
 namespace Adaptive.ReactiveTrader.Server.Blotter
 {
@@ -9,6 +10,11 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
             var system = ActorSystem.Create("BlotterService");
 
             var bootstrapActor = system.ActorOf<BootstrapActor>();
+
+            bootstrapActor.Tell(new BootstrapMessage());
+
+            Console.WriteLine("Press a key to exit Blotter service");
+            Console.ReadKey();
         }
     }
 }
