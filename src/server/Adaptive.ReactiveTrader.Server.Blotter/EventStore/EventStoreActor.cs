@@ -18,8 +18,8 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
 
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private IEventStoreConnection _conn;
-        private EventStoreAllCatchUpSubscription _subscription;
         private IActorRef _cacheActor;
+        private EventStoreStreamCatchUpSubscription _subscription;
 
         public EventStoreActor()
         {
@@ -32,8 +32,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
         {
             _log.Info("Subscribing to all event store events");
             _cacheActor = Context.Sender;
-
-            _subscription = _conn.SubscribeToAllFrom(Position.Start, false, OnEventAppeared, OnCaughtUp);
+            _subscription = _conn.SubscribeToStreamFrom("trades", null, false, OnEventAppeared, OnCaughtUp);
         }
 
         private void OnCaughtUp(EventStoreCatchUpSubscription obj)
@@ -44,6 +43,8 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
         private void OnEventAppeared(EventStoreCatchUpSubscription eventStoreCatchUpSubscription,
             ResolvedEvent resolvedEvent)
         {
+            _log.Info("NEW EVENT");
+
             switch (resolvedEvent.Event.EventType)
             {
                 default:
