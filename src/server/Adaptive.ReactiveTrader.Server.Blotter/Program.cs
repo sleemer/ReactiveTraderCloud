@@ -7,14 +7,14 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
     {
         public static void Main(string[] args)
         {
-            var system = ActorSystem.Create("BlotterService");
+            var eventStoreUrl = args.Length > 0 ? args[0] : "tcp://admin:changeit@127.0.0.1:1113";
 
-            var bootstrapActor = system.ActorOf<BootstrapActor>("Bootstrapper");
+            var system = ActorSystem.Create(ActorNames.ActorSystemName);
 
-            bootstrapActor.Tell(new BootstrapMessage());
+            system.ActorOf(Props.Create(() => new BootstrapActor(eventStoreUrl)), ActorNames.BootstrapActor.Name)
+                .Tell(new BootstrapMessage());
 
-            Console.WriteLine("Press a key to exit Blotter service");
-            Console.ReadKey();
+            system.AwaitTermination();
         }
     }
 }
