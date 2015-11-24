@@ -25,7 +25,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
         {
             _log.Info("Creating event store actor");
 
-            Receive<ConnectMessage>(_ =>
+            Receive<ConnectEventStoreMessage>(_ =>
             {
                 _log.Info("Connecting to event store...");
 
@@ -37,7 +37,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
                 _conn = EventStoreConnection.Create(connectionSettings, uri);
 
                 _conn.ConnectAsync()
-                    .ContinueWith(__ => new ConnectedMessage(),
+                    .ContinueWith(__ => new EventStoreConnectedMessage(),
                         TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously)
                     .PipeTo(sender);
 

@@ -7,6 +7,7 @@
         public static readonly ActorData ConsoleWriterActor = new ActorData("consoleWriter", $"akka://{ActorSystemName}/user"); // /user/consoleWriter
         public static readonly ActorData BootstrapActor = new ActorData("bootstrap", $"akka://{ActorSystemName}/user"); // /user/bootstrap
         public static readonly ActorData EventStoreActor = new ActorData("eventStore", $"akka://{ActorSystemName}/user"); // /user/eventStore
+        public static readonly ActorData WampActor = new ActorData("wampActor", $"akka://{ActorSystemName}/user"); // /user/wampActor
         public static readonly ActorData TradeCacheActor = new ActorData("tradeCache", $"akka://{ActorSystemName}/user"); // /user/tradeCache
     }
 

@@ -1,5 +1,6 @@
 ﻿using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
 using Adaptive.ReactiveTrader.Server.Blotter.TradeCache;
+using Adaptive.ReactiveTrader.Server.Blotter.Wamp;
 using Akka.Actor;
 using Akka.Event;
 
@@ -8,24 +9,27 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
     public class BootstrapActor : ReceiveActor
     {
         private readonly string _eventStoreUrl;
+        private readonly string _wampUrl;
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
-        private IActorRef _eventStoreActor;
+        private ActorSelection _eventStoreActor;
         private IActorRef _blotterCacheActor;
+        private IActorRef _wampActor;
 
-        public BootstrapActor(string eventStoreUrl)
+        public BootstrapActor(string eventStoreUrl, string wampUrl)
         {
             _eventStoreUrl = eventStoreUrl;
-            Receive<ConnectedMessage>(_ => OnEventStoreActorConnected());
+            _wampUrl = wampUrl;
+            Receive<EventStoreConnectedMessage>(_ => OnEventStoreActorConnected());
             Receive<BootstrapMessage>(_ => Bootstrap());
-
-            _log.Info("Bootstrap ctor");
         }
 
         private void Bootstrap()
         {
-            _eventStoreActor = Context.ActorOf(Props.Create(() => new EventStoreActor(_eventStoreUrl)), ActorNames.EventStoreActor.Name);
-            _eventStoreActor.Tell(new ConnectMessage(), Self);
+            _eventStoreActor = Context.ActorSelection(ActorNames.EventStoreActor.Path);
+            _eventStoreActor.Tell(new ConnectEventStoreMessage());
+
+            _wampActor = Context.ActorOf(Props.Create(() => new WampActor(_wampUrl)), ActorNames.WampActor.Name);
         }
 
         private void OnEventStoreActorConnected()

@@ -26,11 +26,13 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             Receive<BlotterEndOfSotwMessage>(_ => OnBlotterEndOfSotw());
         }
 
-        private void WarmUpCache(IActorRef eventStoreActorRef)
+        private void WarmUpCache(ICanTell eventStoreActorRef)
         {
             _log.Info("Warming up trade cache");
             _tradeSubscriptionState = TradeSubscriptionStates.ReceivingSotw;
-            eventStoreActorRef.Tell(new GetTradesMessage(), Self);
+
+            Context.ActorSelection(ActorNames.EventStoreActor.Path).Tell(new GetTradesMessage());
+            //eventStoreActorRef.Tell(new GetTradesMessage());
         }
 
         private void OnTradeCreatedEvent(TradeCreatedEvent tradeCreatedEvent)

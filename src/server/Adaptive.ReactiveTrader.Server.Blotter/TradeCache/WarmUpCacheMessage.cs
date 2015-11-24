@@ -4,9 +4,9 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
 {
     internal class WarmUpCacheMessage
     {
-        public IActorRef EventStoreActorRef { get; }
+        public ICanTell EventStoreActorRef { get; }
 
-        public WarmUpCacheMessage(IActorRef eventStoreActorRef)
+        public WarmUpCacheMessage(ICanTell eventStoreActorRef)
         {
             EventStoreActorRef = eventStoreActorRef;
         }

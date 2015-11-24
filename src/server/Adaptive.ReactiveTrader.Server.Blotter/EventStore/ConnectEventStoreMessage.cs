@@ -1,6 +1,6 @@
 ﻿namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
 {
-    internal class ConnectMessage
+    internal class ConnectEventStoreMessage
     {
         
     }
