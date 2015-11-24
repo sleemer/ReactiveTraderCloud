@@ -24,7 +24,26 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
         public EventStoreActor()
         {
             _log.Info("Creating event store actor");
-            Receive<ConnectMessage>(async _ => {await Connect(); });
+
+            Receive<ConnectMessage>(_ =>
+            {
+                _log.Info("Connecting to event store...");
+
+                var sender = Sender;
+
+                var connectionSettings = ConnectionSettings.Create(); //.KeepReconnecting(); // todo: reconnecting logic
+
+                var uri = new Uri("tcp://admin:changeit@127.0.0.1:1113");
+                _conn = EventStoreConnection.Create(connectionSettings, uri);
+
+                _conn.ConnectAsync()
+                    .ContinueWith(__ => new ConnectedMessage(),
+                        TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously)
+                    .PipeTo(sender);
+
+                _log.Info("Connected to event store");
+            });
+
             Receive<GetTradesMessage>(_ => GetTrades());
         }
 
@@ -59,22 +78,6 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
                     _cacheActor.Tell(GetEvent<TradeRejectedEvent>(resolvedEvent.Event));
                     break;
             }
-        }
-
-        private async Task Connect()
-        {
-            _log.Info("Connecting to event store...");
-
-            var sender = Context.Sender;
-
-            var connectionSettings = ConnectionSettings.Create(); //.KeepReconnecting(); // todo: reconnecting logic
-
-            var uri = new Uri("tcp://admin:changeit@127.0.0.1:1113");
-            _conn = EventStoreConnection.Create(connectionSettings, uri);
-            await _conn.ConnectAsync();
-
-            _log.Info("Connected to event store");
-            sender.Tell(new ConnectedMessage(), Self);
         }
 
         private static T GetEvent<T>(RecordedEvent evt)

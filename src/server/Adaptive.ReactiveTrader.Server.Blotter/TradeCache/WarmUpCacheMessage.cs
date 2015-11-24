@@ -2,7 +2,7 @@
 
 namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
 {
-    public class WarmUpCacheMessage
+    internal class WarmUpCacheMessage
     {
         public IActorRef EventStoreActorRef { get; }
 
