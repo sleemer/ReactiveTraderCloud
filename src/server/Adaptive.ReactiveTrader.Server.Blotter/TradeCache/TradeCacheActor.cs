@@ -18,7 +18,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
         public TradeCacheActor()
         {
             _log.Info("Created trade cache actor");
-            Receive<WarmUpCacheMessage>(msg => WarmUpCache(msg.EventStoreActorRef));
+            Receive<WarmUpCacheMessage>(_ => WarmUpCache());
             // todo consider mapping to message
             Receive<TradeCreatedEvent>(e => OnTradeCreatedEvent(e));
             Receive<TradeCompletedEvent>(e => OnTradeCompletedEvent(e));
@@ -26,7 +26,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             Receive<BlotterEndOfSotwMessage>(_ => OnBlotterEndOfSotw());
         }
 
-        private void WarmUpCache(ICanTell eventStoreActorRef)
+        private void WarmUpCache()
         {
             _log.Info("Warming up trade cache");
             _tradeSubscriptionState = TradeSubscriptionStates.ReceivingSotw;

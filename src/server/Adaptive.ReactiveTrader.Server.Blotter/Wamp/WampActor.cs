@@ -21,8 +21,6 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.Wamp
                 _channel = BrokerFactory.Create(wampUrl, Realm).Result;
                 _channel.RegisterCall("reference.getBlotterTrades", GetBlotterTrades).Wait();
             });
-
-
         }
 
         private void GetBlotterTrades(IRequestContext requestContext, IMessage message)

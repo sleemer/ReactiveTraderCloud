@@ -29,7 +29,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
             {
                 _log.Info("Connecting to event store...");
 
-                var sender = Sender;
+                var tradeCacheActor = Context.ActorSelection(ActorNames.TradeCacheActor.Path);
 
                 var connectionSettings = ConnectionSettings.Create(); //.KeepReconnecting(); // todo: reconnecting logic
 
@@ -37,9 +37,9 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
                 _conn = EventStoreConnection.Create(connectionSettings, uri);
 
                 _conn.ConnectAsync()
-                    .ContinueWith(__ => new EventStoreConnectedMessage(),
+                    .ContinueWith(__ => new WarmUpCacheMessage(),
                         TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously)
-                    .PipeTo(sender);
+                    .PipeTo(tradeCacheActor);
 
                 _log.Info("Connected to event store");
             });
