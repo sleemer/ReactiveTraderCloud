@@ -1,5 +1,4 @@
-﻿using System;
-using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
+﻿using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
 using Adaptive.ReactiveTrader.Server.Blotter.TradeCache;
 using Adaptive.ReactiveTrader.Server.Blotter.Wamp;
 using Akka.Actor;
@@ -17,11 +16,11 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
 
             var tradeCacheActor = system.ActorOf(Props.Create(() => new TradeCacheActor()), ActorNames.TradeCacheActor.Name);
 
-            var wampActor = system.ActorOf(Props.Create(() => new WampConnectionActor(wampUrl)), ActorNames.WampActor.Name);
-            wampActor.Tell(new ConnectWampMessage());
+            var wampActor = system.ActorOf(Props.Create(() => new WampConnectionActor(wampUrl)), ActorNames.WampConnectionActor.Name);
+            wampActor.Tell(new WampConnectionActor.ConnectWampMessage());
 
             var eventStoreActor = system.ActorOf(Props.Create(() => new EventStoreActor(eventStoreUrl)), ActorNames.EventStoreActor.Name);
-            eventStoreActor.Ask<bool>(new ConnectEventStoreMessage());
+            eventStoreActor.Ask<bool>(new EventStoreActor.ConnectEventStoreMessage());
 
             system.AwaitTermination();
         }

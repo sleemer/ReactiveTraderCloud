@@ -12,6 +12,16 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
 {
     public class EventStoreActor : ReceiveActor
     {
+        #region messages
+        internal class ConnectEventStoreMessage
+        {
+        }
+
+        internal class GetTradesMessage
+        {
+        }
+        #endregion
+
         private const string TradeCompletedEvent = "TradeCompletedEvent";
         private const string TradeRejectedEvent = "TradeRejectedEvent";
         private const string TradeCreatedEvent = "TradeCreatedEvent";
@@ -37,7 +47,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
                 _conn = EventStoreConnection.Create(connectionSettings, uri);
 
                 _conn.ConnectAsync()
-                    .ContinueWith(__ => new WarmUpCacheMessage(),
+                    .ContinueWith(__ => new TradeCacheActor.WarmUpCacheMessage(),
                         TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously)
                     .PipeTo(tradeCacheActor);
 
@@ -56,7 +66,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.EventStore
 
         private void OnCaughtUp(EventStoreCatchUpSubscription obj)
         {
-            _cacheActor.Tell(new BlotterEndOfSotwMessage());
+            _cacheActor.Tell(new TradeCacheActor.BlotterEndOfSotwMessage());
         }
 
         private void OnEventAppeared(EventStoreCatchUpSubscription eventStoreCatchUpSubscription, ResolvedEvent resolvedEvent)

@@ -11,9 +11,19 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
 {
     public class TradeCacheActor : ReceiveActor
     {
-        public class SotwRequestMessage
+        #region messages
+        internal class SotwRequestMessage
         {
         }
+
+        internal class BlotterEndOfSotwMessage
+        {
+        }
+
+        internal class WarmUpCacheMessage
+        {
+        }
+        #endregion
 
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private TradeSubscriptionStates _tradeSubscriptionState = TradeSubscriptionStates.Unsubscribed;
@@ -37,8 +47,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             _log.Info("Warming up trade cache");
             _tradeSubscriptionState = TradeSubscriptionStates.ReceivingSotw;
 
-            Context.ActorSelection(ActorNames.EventStoreActor.Path).Tell(new GetTradesMessage());
-            //eventStoreActorRef.Tell(new GetTradesMessage());
+            Context.ActorSelection(ActorNames.EventStoreActor.Path).Tell(new EventStoreActor.GetTradesMessage());
         }
 
         private void OnTradeCreatedEvent(TradeCreatedEvent tradeCreatedEvent)
@@ -98,9 +107,6 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
                 case TradeSubscriptionStates.ReceivingUpdates:
                     SetTradeStatus(tradeId, status);
                     _log.Info($"Publishing {status} trade");
-                    // todo publish trade
-                    var wampActor = Context.ActorSelection(ActorNames.WampActor.Path);
-                    wampActor.Tell(new BlotterTradeUpdateMessage(_trades[tradeId]));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -130,7 +136,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             }
             _trades[key] = dto;
 
-            Context.System.EventStream.Publish(new SendTradesMessage(new TradesDto {Trades = new[] {dto}}));
+            Context.System.EventStream.Publish(new WampClientSubscriptionActor.SendTradesMessage(new TradesDto {Trades = new[] {dto}}));
         }
     }
 }
