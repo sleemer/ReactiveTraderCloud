@@ -8,6 +8,7 @@
         public static readonly ActorData BootstrapActor = new ActorData("bootstrap", $"akka://{ActorSystemName}/user"); // /user/bootstrap
         public static readonly ActorData EventStoreActor = new ActorData("eventStore", $"akka://{ActorSystemName}/user"); // /user/eventStore
         public static readonly ActorData WampActor = new ActorData("wampActor", $"akka://{ActorSystemName}/user"); // /user/wampActor
+        public static readonly ActorData WampChildActor = new ActorData("wampChildActor", $"akka://{ActorSystemName}/user/wampActor/"); // /user/wampActor/wampChildActor
         public static readonly ActorData TradeCacheActor = new ActorData("tradeCache", $"akka://{ActorSystemName}/user"); // /user/tradeCache
     }
 

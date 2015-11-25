@@ -17,11 +17,11 @@ namespace Adaptive.ReactiveTrader.Server.Blotter
 
             var tradeCacheActor = system.ActorOf(Props.Create(() => new TradeCacheActor()), ActorNames.TradeCacheActor.Name);
 
-            var wampActor = system.ActorOf(Props.Create(() => new WampActor(wampUrl)), ActorNames.WampActor.Name);
+            var wampActor = system.ActorOf(Props.Create(() => new WampConnectionActor(wampUrl)), ActorNames.WampActor.Name);
             wampActor.Tell(new ConnectWampMessage());
 
             var eventStoreActor = system.ActorOf(Props.Create(() => new EventStoreActor(eventStoreUrl)), ActorNames.EventStoreActor.Name);
-            eventStoreActor.Tell(new ConnectEventStoreMessage());
+            eventStoreActor.Ask<bool>(new ConnectEventStoreMessage());
 
             system.AwaitTermination();
         }

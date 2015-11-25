@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Adaptive.ReactiveTrader.Contract;
 using Adaptive.ReactiveTrader.Contract.Events;
 using Adaptive.ReactiveTrader.Server.Blotter.EventStore;
+using Adaptive.ReactiveTrader.Server.Blotter.Wamp;
 using Akka.Actor;
 using Akka.Event;
 
@@ -10,6 +11,10 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
 {
     public class TradeCacheActor : ReceiveActor
     {
+        public class SotwRequestMessage
+        {
+        }
+
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private TradeSubscriptionStates _tradeSubscriptionState = TradeSubscriptionStates.Unsubscribed;
 
@@ -24,6 +29,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             Receive<TradeCompletedEvent>(e => OnTradeCompletedEvent(e));
             Receive<TradeRejectedEvent>(e => OnTradeRejectedEvent(e));
             Receive<BlotterEndOfSotwMessage>(_ => OnBlotterEndOfSotw());
+            Receive<SotwRequestMessage>(_ => Sender.Tell(new TradesDto {Trades = _trades.Values}));
         }
 
         private void WarmUpCache()
@@ -44,10 +50,10 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
                     _log.Warning("Received created when unsubscribed");
                     break;
                 case TradeSubscriptionStates.ReceivingSotw:
-                    AddTradeCreated(tradeCreatedEvent);
+                    AddAndPublishTradeCreated(tradeCreatedEvent);
                     break;
                 case TradeSubscriptionStates.ReceivingUpdates:
-                    AddTradeCreated(tradeCreatedEvent);
+                    AddAndPublishTradeCreated(tradeCreatedEvent);
                     _log.Info("Publishing created trade");
                     // todo publish trade
                     break;
@@ -93,6 +99,8 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
                     SetTradeStatus(tradeId, status);
                     _log.Info($"Publishing {status} trade");
                     // todo publish trade
+                    var wampActor = Context.ActorSelection(ActorNames.WampActor.Path);
+                    wampActor.Tell(new BlotterTradeUpdateMessage(_trades[tradeId]));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -112,7 +120,7 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
             }
         }
 
-        private void AddTradeCreated(TradeCreatedEvent tradeCreatedEvent)
+        private void AddAndPublishTradeCreated(TradeCreatedEvent tradeCreatedEvent)
         {
             var dto = tradeCreatedEvent.ToDto();
             var key = dto.TradeId;
@@ -121,6 +129,8 @@ namespace Adaptive.ReactiveTrader.Server.Blotter.TradeCache
                 _log.Warning("Create trade already has trade id: " + key);
             }
             _trades[key] = dto;
+
+            Context.System.EventStream.Publish(new SendTradesMessage(new TradesDto {Trades = new[] {dto}}));
         }
     }
 }

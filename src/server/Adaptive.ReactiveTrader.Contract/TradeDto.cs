@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Adaptive.ReactiveTrader.Contract.Events;
 
 namespace Adaptive.ReactiveTrader.Contract
@@ -21,6 +22,11 @@ namespace Adaptive.ReactiveTrader.Contract
             return
                 $"TradeId: {TradeId}, TraderName: {TraderName}, CurrencyPair: {CurrencyPair}, Notional: {Notional}, Direction: {Direction}, SpotRate: {SpotRate}, TradeDate: {TradeDate}, ValueDate: {ValueDate}, Status: {Status}, DealtCurrency: {DealtCurrency}";
         }
+    }
+
+    public class TradesDto
+    {
+        public IEnumerable<TradeDto> Trades { get; set; }
     }
 
     public static class Mappers
