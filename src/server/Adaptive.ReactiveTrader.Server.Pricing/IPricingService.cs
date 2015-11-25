@@ -4,8 +4,8 @@ using Adaptive.ReactiveTrader.Messaging;
 
 namespace Adaptive.ReactiveTrader.Server.Pricing
 {
-    internal interface IPricingService
+    public interface IPricingService
     {
-        IDisposable GetPriceUpdates(IRequestContext context, GetSpotStreamRequestDto request, IObserver<SpotPriceDto> streamHandler);
+        IObservable<SpotPriceDto> GetPriceUpdates(IRequestContext context, GetSpotStreamRequestDto request);
     }
 }

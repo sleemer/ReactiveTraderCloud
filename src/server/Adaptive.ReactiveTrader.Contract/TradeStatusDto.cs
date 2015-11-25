@@ -1,4 +1,4 @@
-namespace Adaptive.ReactiveTrader.Contract
+﻿namespace Adaptive.ReactiveTrader.Contract
 {
     public enum TradeStatusDto
     {

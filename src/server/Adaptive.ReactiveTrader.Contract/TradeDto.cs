@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Adaptive.ReactiveTrader.Contract.Events;
 
 namespace Adaptive.ReactiveTrader.Contract
