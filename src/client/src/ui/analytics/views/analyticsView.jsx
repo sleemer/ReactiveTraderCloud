@@ -6,11 +6,15 @@ import { ViewBase } from '../../common';
 import { AnalyticsModel, PositionsChartModel, PnlChartModel } from '../model';
 import { ChartGradient } from './';
 import NVD3Chart from 'react-nvd3';
+import AnalyticsBarChart from './chart/analyticsBarChart';
 import numeral from 'numeral';
+import Dimensions from 'react-dimensions';
+import PositionsBubbleChart from './positions-chart/positionsBubbleChart';
 import './analytics.scss';
 
 var _log:logger.Logger = logger.create('AnalyticsView');
 
+@Dimensions()
 export default class AnalyticsView extends ViewBase {
   constructor() {
     super();
@@ -19,7 +23,15 @@ export default class AnalyticsView extends ViewBase {
     };
   }
 
+  componentDidMount(){
+    this.updateGradient();
+  }
+
   componentDidUpdate() {
+    this.updateGradient();
+  }
+
+  updateGradient(){
     if (this.refs.pnlChart) {
       if (!this.chartGradient) {
         this.chartGradient = new ChartGradient();
@@ -34,29 +46,48 @@ export default class AnalyticsView extends ViewBase {
 
   render() {
     let model:AnalyticsModel = this.state.model;
+
     if (!model) {
       return null;
     }
     if (!model.isAnalyticsServiceConnected)
-      return <span />;
+      return (
+        <div className='analytics__container'>
+          <div ref='analyticsInnerContainer'></div>
+        </div>);
 
     let pnlComponents = this._createPnlComponents();
-    let positionsComponents = this._createPositionsComponents();
+    let pnlSliders = this._createPnlSliders();
+    let positionsBubbleChart = this._createPositionsChart();
+
+    let newWindowBtnClassName = classnames(
+      'glyphicon glyphicon-new-window',
+      {
+        'analytics__icon--tearoff' : !model.canPopout,
+        'analytics__icon--tearoff--hidden' : model.canPopout
+      }
+    );
+
     return (
-      <div className='analytics-container animated fadeIn'>
-        <div className='container-controls'>
-          <i className='tearoff-trigger glyphicon glyphicon-new-window pull-right'
+      <div className='analytics analytics__container animated fadeIn'>
+        <div className='analytics__controls popout__controls'>
+          <i className={newWindowBtnClassName}
              onClick={() => router.publishEvent(this.props.modelId, 'popOutAnalytics', {})}/>
         </div>
         {pnlComponents}
-        {positionsComponents}
+        {positionsBubbleChart}
+        {pnlSliders}
       </div>);
   }
 
   _createPnlComponents() {
     let pnlChartModel:PnlChartModel = this.state.model.pnlChartModel;
     let pnlChart = null;
-    let className = classnames('nv-container', {'negative': pnlChartModel.lastPos > 0});
+    let analyticsHeaderClassName = classnames('analytics__header-value', {
+      'analytics__header-value--negative': pnlChartModel.lastPos < 0,
+      'analytics__header-value--positive': pnlChartModel.lastPos > 0
+    });
+    let formattedLastPos = numeral(pnlChartModel.lastPos).format();
     if (pnlChartModel.hasData) {
       let configurePnLChart = (chart) => {
         let pnlTooltip = d => {
@@ -73,7 +104,7 @@ export default class AnalyticsView extends ViewBase {
           type='lineChart'
           datum={pnlChartModel.getSeries()}
           options={pnlChartModel.options}
-          height={170}
+          height={180}
           configure={configurePnLChart}/>
       );
     } else {
@@ -81,58 +112,39 @@ export default class AnalyticsView extends ViewBase {
     }
     return (
       <div>
-        <span className='header'>Profit & Loss&nbsp;
-          <small className='text-small'>USD {pnlChartModel.lastPos}</small>
-        </span>
-        <div className={className}>
+        <div className='analytics__header'>
+          <span className='analytics__header-title'>
+            <i className='analytics__header-title-icon glyphicon glyphicon-stats'></i>
+            Profit & Loss
+          </span>
+          <span className={analyticsHeaderClassName}>USD {formattedLastPos}</span>
+        </div>
+        <div className='analytics__chart-container'>
           {pnlChart}
         </div>
       </div>
     );
   }
 
-  _createPositionsComponents() {
+  _createPositionsChart(){
+    let model:AnalyticsModel = this.state.model;
+    let positionsChartData = model.positionsChartModel.seriesData;
+
+    return (
+        <div className='analytics__bubblechart-container'>
+          <span className='analytics__chart-title analytics__bubblechart-title'>Positions</span>
+          <PositionsBubbleChart data={positionsChartData}/>
+        </div>
+      );
+  }
+
+  _createPnlSliders() {
     let positionsChartModel:PositionsChartModel = this.state.model.positionsChartModel;
-    let pnlHeight = Math.min(positionsChartModel.itemCount * 30, 200);
-    let configurePositionsChart = (chart) => {
-      chart.tooltip.enabled(false);
-    };
-    let sharedClassNames = ['pull-right', 'btn', 'btn-small', 'btn-default'];
-    let pnlButtonClassName = classnames(
-      sharedClassNames,
-      {
-        'selected': positionsChartModel.basePnlDisplayModelSelected
-      }
-    );
-    let positionButtonClassName = classnames(
-      sharedClassNames,
-      {
-        'selected': !positionsChartModel.basePnlDisplayModelSelected
-      }
-    );
     return (
       <div>
-        <span className='header'>Positions / PNL</span>
-        <div className='buttons'>
-          <button
-            className={pnlButtonClassName}
-            onClick={() => router.publishEvent(this.props.modelId, 'togglePnlDisplayMode', {})}>PnL
-          </button>
-          <button
-            className={positionButtonClassName}
-            onClick={() => router.publishEvent(this.props.modelId, 'togglePnlDisplayMode', {})}>Positions
-          </button>
-        </div>
-        <div className='nv-container clearfix pnlchart'>
-          <NVD3Chart
-            type='multiBarHorizontalChart'
-            datum={positionsChartModel.getSeries()}
-            options={positionsChartModel.options}
-            height={pnlHeight}
-            x='symbol'
-            y={positionsChartModel.yAxisValuePropertyName}
-            configure={configurePositionsChart}
-          />
+        <div className='analytics__chart-container'>
+          <span className='analytics__chart-title'>PnL</span>
+          <AnalyticsBarChart series={positionsChartModel.seriesData}/>
         </div>
       </div>
     );

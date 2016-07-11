@@ -1,4 +1,5 @@
-﻿using Adaptive.ReactiveTrader.Contract;
+﻿using System;
+using Adaptive.ReactiveTrader.Contract;
 
 namespace Adaptive.ReactiveTrader.Server.Host
 {
@@ -8,12 +9,12 @@ namespace Adaptive.ReactiveTrader.Server.Host
             long tradeId,
             string traderName,
             string currencyPair,
-            long notional,
+            decimal notional,
             string dealtCurrency,
             DirectionDto direction,
             decimal spotRate,
-            string tradeDate,
-            string valueDate,
+            DateTime tradeDate,
+            DateTime valueDate,
             TradeStatusDto status)
         {
             TradeId = tradeId;
@@ -31,12 +32,12 @@ namespace Adaptive.ReactiveTrader.Server.Host
         public long TradeId { get; }
         public string TraderName { get; }
         public string CurrencyPair { get; }
-        public long Notional { get; }
+        public decimal Notional { get; }
         public string DealtCurrency { get; }
         public DirectionDto Direction { get; }
         public decimal SpotRate { get; }
-        public string TradeDate { get; }
-        public string ValueDate { get; }
+        public DateTime TradeDate { get; }
+        public DateTime ValueDate { get; }
         public TradeStatusDto Status { get; set; }
 
         public override string ToString()

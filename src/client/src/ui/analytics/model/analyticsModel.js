@@ -1,31 +1,31 @@
-import Rx from 'rx';
-import _ from 'lodash';
-import NVD3Chart from 'react-nvd3';
-import d3 from 'd3';
 import { Router,  observeEvent } from 'esp-js/src';
 import { AnalyticsService } from '../../../services';
 import { ServiceStatus } from '../../../system/service';
-import { logger } from '../../../system';
+import { logger, Environment } from '../../../system';
 import { ModelBase, RegionManagerHelper } from '../../common';
 import { RegionManager, RegionNames, view  } from '../../regions';
-import { PricePoint, PnlChartModel, PositionsChartModel, ChartModelBase } from './';
+import { PnlChartModel, PositionsChartModel, ChartModelBase } from './';
 import {
   AnalyticsRequest,
   PositionUpdates,
-  HistoricPosition,
-  CurrencyPairPosition
+  RegionSettings
 } from '../../../services/model';
 import { AnalyticsView } from '../views';
+import { OpenFin } from '../../../system/openFin';
+import { WellKnownModelIds } from '../../../';
 
 var _log:logger.Logger = logger.create('AnalyticsModel');
 
 @view(AnalyticsView)
 export default class AnalyticsModel extends ModelBase {
   _analyticsService:AnalyticsService;
-
   _positionsChartModel:PositionsChartModel;
   _pnlChartModel:PnlChartModel;
   _regionManagerHelper:RegionManagerHelper;
+  _regionManager:RegionManager;
+  _regionSettings:RegionSettings;
+  _regionName:string;
+  _openFin:OpenFin;
 
   isAnalyticsServiceConnected: Boolean;
 
@@ -33,15 +33,19 @@ export default class AnalyticsModel extends ModelBase {
     modelId:string,
     router:Router,
     analyticsService:AnalyticsService,
-    regionManager:RegionManager
+    regionManager:RegionManager,
+    openFin:OpenFin
   ) {
     super(modelId, router);
     this._analyticsService = analyticsService;
-
+    this._regionName = RegionNames.analytics;
     this.isAnalyticsServiceConnected = false;
+    this._regionSettings = new RegionSettings('Analytics', 400, 800, false);
     this._pnlChartModel = new PnlChartModel();
     this._positionsChartModel = new PositionsChartModel();
-    this._regionManagerHelper = new RegionManagerHelper(RegionNames.quickAccess, regionManager, this);
+    this._regionManager = regionManager;
+    this._regionManagerHelper = new RegionManagerHelper(this._regionName, regionManager, this, this._regionSettings);
+    this._openFin = openFin;
   }
 
   get positionsChartModel() {
@@ -50,6 +54,10 @@ export default class AnalyticsModel extends ModelBase {
 
   get pnlChartModel() {
     return this._pnlChartModel;
+  }
+
+  get canPopout() {
+    return Environment.isRunningInIE;
   }
 
   observeEvents() {
@@ -61,7 +69,8 @@ export default class AnalyticsModel extends ModelBase {
   _onInit() {
     _log.info(`Analytics model starting`);
     this._subscribeToConnectionStatus();
-    this._regionManagerHelper.addToRegion();
+    this._regionManagerHelper.init();
+    this._observeSidebarEvents();
   }
 
   @observeEvent('referenceDataLoaded')
@@ -73,7 +82,7 @@ export default class AnalyticsModel extends ModelBase {
   @observeEvent('popOutAnalytics')
   _onPopOutAnalytics() {
     _log.info(`Popping out analytics`);
-    this._regionManagerHelper.popout(400, 500);
+    this._regionManagerHelper.popout();
   }
 
   _subscribeToAnalyticsStream() {
@@ -84,6 +93,7 @@ export default class AnalyticsModel extends ModelBase {
         (analyticsUpdate:PositionUpdates) => {
           this._pnlChartModel.update(analyticsUpdate.history);
           this._positionsChartModel.update(analyticsUpdate.currentPositions);
+          this._openFin.publishCurrentPositions(analyticsUpdate.currentPositions);
         },
         err => {
           _log.error('Error on analyticsService stream stream', err);
@@ -100,6 +110,23 @@ export default class AnalyticsModel extends ModelBase {
         (status:ServiceStatus) => {
           this.isAnalyticsServiceConnected = status.isConnected;
         })
+    );
+  }
+
+  _observeSidebarEvents(){
+    this.addDisposable(
+      this.router
+        .getEventObservable(WellKnownModelIds.sidebarModelId, 'hideAnalytics')
+        .observe(() => this.router.runAction(this.modelId, ()=> {
+          this._regionManagerHelper.removeFromRegion();
+        }))
+    );
+    this.addDisposable(
+      this.router
+        .getEventObservable(WellKnownModelIds.sidebarModelId, 'showAnalytics')
+        .observe(() => this.router.runAction(this.modelId, () => {
+          this._regionManagerHelper.addToRegion();
+        }))
     );
   }
 }

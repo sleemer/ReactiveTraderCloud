@@ -20,7 +20,7 @@ populatedEventstoreContainer_minor="0"
 populatedEventstoreContainer="reactivetrader/eventstore:$populatedEventstoreContainer_major.$populatedEventstoreContainer_minor"
 
 serversContainer_major="0"
-serversContainer_minor="0"
+serversContainer_minor="1"
 serversContainer="reactivetrader/servers:$serversContainer_major.$serversContainer_minor"
 
 webContainer_major="0"
@@ -33,9 +33,9 @@ ubuntuContainer="ubuntu:14.04.2"
 debianContainer="debian:8.2"
 
 # crossbar
-vCrossbar="0.11.1"
+vCrossbar="0.13.2-trusty"
 crossbarContainer_major="0"
-crossbarContainer_minor="0"
+crossbarContainer_minor="1"
 crossbarContainer="weareadaptive/crossbar:$crossbarContainer_major.$crossbarContainer_minor"
 
 # eventstore
@@ -45,9 +45,9 @@ eventstoreContainer_minor="0"
 eventstoreContainer="weareadaptive/eventstore:$eventstoreContainer_major.$eventstoreContainer_minor"
 
 # node
-vNode="5.3.0"
-nodeContainer_major="0"
-nodeContainer_minor="0"
+vNode="6.2.1"
+nodeContainer_major="6"
+nodeContainer_minor="2"
 nodeContainer="weareadaptive/node:$nodeContainer_major.$nodeContainer_minor"
 
 # nginx
@@ -57,11 +57,11 @@ nginxContainer_major="0"
 nginxContainer_minor="0"
 nginxContainer="weareadaptive/nginx:$nginxContainer_major.$nginxContainer_minor"
 
-# mono
-vDnx="1.0.0-rc1-final"
-monoContainer_major="0"
-monoContainer_minor="0"
-monoContainer="weareadaptive/mono:$monoContainer_major.$monoContainer_minor"
+# dotnet
+dotnetversion="dotnet-dev-1.0.0-preview2-003121"
+dotnetContainer_major="0"
+dotnetContainer_minor="1"
+dotnetContainer="weareadaptive/dotnet:$dotnetContainer_major.$dotnetContainer_minor"
 
 # TestTool
 vJq="1.5"

@@ -1,1 +1,1 @@
-dnu restore
+dotnet restore

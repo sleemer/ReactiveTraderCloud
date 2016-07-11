@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 using Adaptive.ReactiveTrader.Contract;
 using Adaptive.ReactiveTrader.Messaging;
 using Adaptive.ReactiveTrader.Messaging.Abstraction;
-using Common.Logging;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace Adaptive.ReactiveTrader.Server.Pricing
 {
     public class PricingServiceHost : ServiceHostBase
     {
-        protected new static readonly ILog Log = LogManager.GetLogger<PricingServiceHost>();
+        // protected new static readonly ILogger Log = Log.ForContext<PricingServiceHost>();
         private readonly IBroker _broker;
         private readonly CompositeDisposable _cleanup = new CompositeDisposable();
 
@@ -37,12 +37,13 @@ namespace Adaptive.ReactiveTrader.Server.Pricing
 
         public async Task GetPriceUpdates(IRequestContext context, IMessage message)
         {
-            Log.DebugFormat("{1} Received GetPriceUpdates from [{0}]",
+            Log.Debug("{host} Received GetPriceUpdates from [{user}] for replyTo {replyTo}",
+                            this,
                             context.UserSession.Username ?? "Unknown User",
-                            this);
+                            message.ReplyTo);
 
-            var spotStreamRequest =
-                JsonConvert.DeserializeObject<GetSpotStreamRequestDto>(Encoding.UTF8.GetString(message.Payload));
+            var spotStreamRequest = JsonConvert.DeserializeObject<GetSpotStreamRequestDto>(Encoding.UTF8.GetString(message.Payload));
+
             var replyTo = message.ReplyTo;
 
             var endpoint = await _broker.GetPrivateEndPoint<SpotPriceDto>(replyTo);

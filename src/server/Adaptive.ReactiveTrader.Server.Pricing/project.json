@@ -1,28 +1,32 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.0-*",
   "description": "Pricing Service",
   "authors": [ "Adaptive Financial Consulting Ltd." ],
-  "tags": [ "Adaptive", "Reactive Trader" ],
-  "projectUrl": "https://github.com/AdaptiveConsulting/ReactiveTraderCloud",
-  "licenseUrl": "https://github.com/AdaptiveConsulting/ReactiveTraderCloud/blob/master/LICENSE",
-
-  "dependencies": {
-    "Adaptive.ReactiveTrader.Server.Host": "1.0.0"
+  "packOptions": {
+    "tags": [ "Adaptive", "Reactive Trader" ],
+    "projectUrl": "https://github.com/AdaptiveConsulting/ReactiveTraderCloud",
+    "licenseUrl": "https://github.com/AdaptiveConsulting/ReactiveTraderCloud/blob/master/LICENSE"
   },
 
-  "commands": {
-    "dev": "Adaptive.ReactiveTrader.Server.Pricing config.dev.json",
-    "prod": "Adaptive.ReactiveTrader.Server.Pricing config.prod.json"
+  "buildOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.0"
+    },
+    "Adaptive.ReactiveTrader.Server.Host": "1.0.0-*",
+    "Newtonsoft.Json": "9.0.1"
   },
 
   "frameworks": {
-    "dnx451": {
-      "frameworkAssemblies": {
-        "System.Runtime": "",
-        "System.Collections": ""
-      },
-
-      "dependencies": { }
+    "netcoreapp1.0": {
+      "imports": [
+        "dnxcore50",
+        "portable-net45"
+      ]
     }
   }
 }

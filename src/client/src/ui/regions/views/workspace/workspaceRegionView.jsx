@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import React from 'react';
-import { router } from '../../../../system';
 import { ViewBase } from '../../../common';
 import { RegionModel, RegionModelRegistration } from '../../model';
 import { createViewForModel} from '../../';
@@ -11,8 +10,12 @@ export default class WorkspaceRegionView extends ViewBase {
     super();
     this.state = {
       model: null
-    }
+    };
   }
+
+  static propTypes = {
+    className: React.PropTypes.string
+  };
 
   render() {
     if(!this.state.model) {
@@ -20,13 +23,14 @@ export default class WorkspaceRegionView extends ViewBase {
     }
     let model : RegionModel = this.state.model;
     return (
-      <div className='currency-pairs'>
-        {
-          model.modelRegistrations.length > 0
-            ? this._renderWorkspaceItems(model.modelRegistrations)
-            : <div className='text-center'><i className='fa fa-5x fa-cog fa-spin'/></div>
-        }
-        <div className='clearfix'></div>
+      <div className={this.props.className}>
+        <div className='workspace-region'>
+          {
+            model.modelRegistrations.length > 0
+              ? this._renderWorkspaceItems(model.modelRegistrations)
+              : <div className='workspace-region__icon--loading'><i className='fa fa-5x fa-cog fa-spin'/></div>
+          }
+        </div>
       </div>);
   }
 
@@ -39,6 +43,6 @@ export default class WorkspaceRegionView extends ViewBase {
           {View}
         </WorkspaceItemContainer>
       );
-    });
+    }).concat(_.times(6, i => <div key={i} className='workspace-region__spacer'/>)); // add empty items at the end so tiles lay out nicely
   }
 }

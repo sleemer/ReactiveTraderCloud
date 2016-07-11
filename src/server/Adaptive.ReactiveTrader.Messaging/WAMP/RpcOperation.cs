@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Reactive.Concurrency;
 using System.Text;
 using System.Threading.Tasks;
 using Adaptive.ReactiveTrader.Messaging.Abstraction;
-using Common.Logging;
+using Serilog;
 using WampSharp.Core.Serialization;
 using WampSharp.V2.Core;
 using WampSharp.V2.Core.Contracts;
@@ -14,8 +13,7 @@ namespace Adaptive.ReactiveTrader.Messaging.WAMP
 {
     internal class RpcOperation : IWampRpcOperation
     {
-        protected static readonly ILog Log = LogManager.GetLogger<RpcOperation>();
-        private readonly IScheduler _scheduler = TaskPoolScheduler.Default;
+        //protected static readonly ILogger Log = Log.ForContext<RpcOperation>();
 
         private readonly Func<IRequestContext, IMessage, Task> _serviceMethod;
 
@@ -36,7 +34,7 @@ namespace Adaptive.ReactiveTrader.Messaging.WAMP
             caller.Error(WampObjectFormatter.Value,
                          dummyDetails,
                          "wamp.error.runtime_error",
-                         new object[] {"Expected parameters"});
+                         new object[] { "Expected parameters" });
         }
 
         public void Invoke<TMessage>(IWampRawRpcOperationRouterCallback caller,
@@ -65,30 +63,49 @@ namespace Adaptive.ReactiveTrader.Messaging.WAMP
 
             try
             {
-                var x = formatter.Deserialize<MessageDto>(arguments[0]);
-
-                var message = new Message
+                Task.Run(async () =>
                 {
-                    ReplyTo = new WampTransientDestination(x.ReplyTo),
-                    Payload = Encoding.UTF8.GetBytes(x.Payload.ToString()) // TODO need to stop this from deserializing
-                };
+                    try
+                    {
+                        var guid = Guid.NewGuid();
 
-                var userSession = new UserSession
-                {
-                    Username = x.Username
-                };
+                        Log.Debug($"[{guid}] RPC operation inner invoke");
 
-                var userContext = new RequestContext(message, userSession);
+                        var x = formatter.Deserialize<MessageDto>(arguments[0]);
+
+                        var payload = x.Payload.ToString();
+
+                        var message = new Message
+                        {
+                            ReplyTo = new WampTransientDestination(x.ReplyTo),
+                            Payload = Encoding.UTF8.GetBytes(payload)
+                        };
+
+                        var userSession = new UserSession
+                        {
+                            Username = x.Username
+                        };
+
+                        var userContext = new RequestContext(message, userSession);
+
+                        Log.Debug($"[{guid}] Calling service method from Username: {userSession.Username}, ReplyTo: {message.ReplyTo}, Payload: {payload}");
+
+                        await serviceMethod(userContext, message);
+
+                        Log.Debug($"[{guid}] Service method called with no exceptions");
+                    }
+                    catch (Exception e1)
+                    {
+                        Log.Error(e1, "Error processing RPC operation");
+                    }
+                });
 
                 caller.Result(WampObjectFormatter.Value, dummyDetails);
-
-
-                _scheduler.Schedule(() => serviceMethod(userContext, message).Wait());
             }
-            catch (Exception e)
+            catch (Exception e2)
             {
-                Log.Error(e);
-                caller.Error(WampObjectFormatter.Value, dummyDetails, e.Message);
+                Log.Error(e2, "Error processing RPC operation");
+                caller.Error(WampObjectFormatter.Value, dummyDetails, e2.Message);
             }
         }
     }

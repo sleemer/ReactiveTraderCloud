@@ -1,4 +1,6 @@
-﻿namespace Adaptive.ReactiveTrader.Contract.Events.Trade
+﻿using System;
+
+namespace Adaptive.ReactiveTrader.Contract.Events.Trade
 {
     public class TradeCreatedEvent
     {
@@ -6,10 +8,10 @@
                                  string traderName,
                                  string currencyPair,
                                  decimal spotRate,
-                                 string tradeDate,
-                                 string valueDate,
+                                 DateTime tradeDate,
+                                 DateTime valueDate,
                                  string direction,
-                                 int notional,
+                                 decimal notional,
                                  string dealtCurrency)
         {
             TradeId = tradeId;
@@ -27,10 +29,10 @@
         public string TraderName { get; }
         public string CurrencyPair { get; }
         public decimal SpotRate { get; }
-        public string TradeDate { get; }
-        public string ValueDate { get; }
+        public DateTime TradeDate { get; }
+        public DateTime ValueDate { get; }
         public string Direction { get; }
-        public int Notional { get; }
+        public decimal Notional { get; }
         public string DealtCurrency { get; }
     }
 }

@@ -1,1 +1,0 @@
-dnx -p Adaptive.ReactiveTrader.MessageBroker run

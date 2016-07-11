@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Concurrency;
 using System.Text;
 using System.Threading.Tasks;
 using Adaptive.ReactiveTrader.Messaging.Abstraction;
-using Common.Logging;
+using Serilog;
 using WampSharp.Core.Serialization;
 using WampSharp.V2.Core;
 using WampSharp.V2.Core.Contracts;
@@ -13,7 +14,7 @@ namespace Adaptive.ReactiveTrader.Messaging.WAMP
 {
     internal class RpcResponseOperation<TResponse> : IWampRpcOperation
     {
-        protected static readonly ILog Log = LogManager.GetLogger<RpcOperation>();
+        //protected static readonly ILogger Log = Log.ForContext<RpcOperation>();
 
         private readonly Func<IRequestContext, IMessage, Task<TResponse>> _serviceMethod;
 
@@ -34,7 +35,7 @@ namespace Adaptive.ReactiveTrader.Messaging.WAMP
             caller.Error(WampObjectFormatter.Value,
                          dummyDetails,
                          "wamp.error.runtime_error",
-                         new object[] {"Expected parameters"});
+                         new object[] { "Expected parameters" });
         }
 
         public void Invoke<TMessage>(IWampRawRpcOperationRouterCallback caller,
@@ -54,7 +55,7 @@ namespace Adaptive.ReactiveTrader.Messaging.WAMP
             InnerInvoke(_serviceMethod, caller, formatter, arguments);
         }
 
-        private static void InnerInvoke<T>(Func<IRequestContext, IMessage, Task<TResponse>> serviceMethod,
+        private void InnerInvoke<T>(Func<IRequestContext, IMessage, Task<TResponse>> serviceMethod,
                                            IWampRawRpcOperationRouterCallback caller,
                                            IWampFormatter<T> formatter,
                                            T[] arguments)
@@ -63,31 +64,45 @@ namespace Adaptive.ReactiveTrader.Messaging.WAMP
 
             try
             {
-                var x = formatter.Deserialize<MessageDto>(arguments[0]);
-
-                var message = new Message
+                Task.Run(async () =>
                 {
-                    ReplyTo = new WampTransientDestination(x.ReplyTo),
-                    Payload = Encoding.UTF8.GetBytes(x.Payload.ToString()) // TODO need to stop this from deserializing
-                };
+                    try
+                    {
+                        var x = formatter.Deserialize<MessageDto>(arguments[0]);
 
-                var userSession = new UserSession
-                {
-                    Username = x.Username
-                };
+                        var message = new Message
+                        {
+                            ReplyTo = new WampTransientDestination(x.ReplyTo),
+                            Payload = Encoding.UTF8.GetBytes(x.Payload.ToString()) // TODO need to stop this from deserializing
+                        };
 
-                var userContext = new RequestContext(message, userSession);
+                        var userSession = new UserSession
+                        {
+                            Username = x.Username
+                        };
 
-                var response = serviceMethod(userContext, message).Result;
+                        var userContext = new RequestContext(message, userSession);
 
+                        var response = await serviceMethod(userContext, message);
 
-                caller.Result(WampObjectFormatter.Value, dummyDetails, new object[] {response});
+                        caller.Result(WampObjectFormatter.Value, dummyDetails, new object[] { response });
+                    }
+                    catch (Exception e1)
+                    {
+                        OnError(caller, e1, dummyDetails);
+                    }
+                });
             }
-            catch (Exception e)
+            catch (Exception e2)
             {
-                Log.Error(e);
-                caller.Error(WampObjectFormatter.Value, dummyDetails, e.Message);
+                OnError(caller, e2, dummyDetails);
             }
+        }
+
+        private static void OnError(IWampRawRpcOperationRouterCallback caller, Exception exception, YieldOptions dummyDetails)
+        {
+            Log.Error(exception, "Error processing RPC request response");
+            caller.Error(WampObjectFormatter.Value, dummyDetails, exception.Message);
         }
     }
 }

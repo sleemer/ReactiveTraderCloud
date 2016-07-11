@@ -8,7 +8,11 @@ export default class RegionNames {
   static get blotter() {
     return 'blotter';
   }
-  static get quickAccess() {
-    return 'quickAccess';
+  static get analytics() {
+    return 'analytics';
+  }
+
+  static get sidebar() {
+    return 'sidebar';
   }
 }

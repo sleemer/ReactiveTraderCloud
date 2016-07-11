@@ -13,12 +13,16 @@ export default class WellKnownModelIds {
     return 'popoutRegionModelId';
   }
 
-  static get quickAccessRegionModelId() {
-    return 'quickAccessRegionModelId';
+  static get analyticsRegionModelId() {
+    return 'analyticsRegionModelId';
   }
 
   static get blotterRegionModelId() {
     return 'blotterRegionModelId';
+  }
+
+  static get sidebarRegionModelId() {
+    return 'sidebarRegionModelId';
   }
 
   static get shellModelId() {
@@ -29,11 +33,23 @@ export default class WellKnownModelIds {
     return 'headerModelId';
   }
 
+  static get footerModelId() {
+    return 'footerModelId';
+  }
+
   static get analyticsModelId() {
     return 'analyticsModelId';
   }
 
   static get blotterModelId() {
     return 'blotterModelId';
+  }
+
+  static get chromeModelId() {
+    return 'chromeModelId';
+  }
+
+  static get sidebarModelId() {
+    return 'sidebarModelId';
   }
 }

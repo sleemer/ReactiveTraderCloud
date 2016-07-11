@@ -23,8 +23,7 @@ if [[ $? != 0 ]];then
 fi
 
 # smoke tests
-echo " "
 echo "Starting local tests ..."
 docker run                           \
   --net=host $serversContainer$build \
-  bash -c "dnx --configuration Release -p Adaptive.ReactiveTrader.Server.IntegrationTests test -parallel none"
+  bash -c "dotnet test --configuration Release Adaptive.ReactiveTrader.Server.IntegrationTests"

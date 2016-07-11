@@ -28,7 +28,7 @@ export default class ModelBase extends DisposableBase {
   /**
    * Runs the given action on the dispatch loop for this model, ensures that any model observer will be notified of the change
    * @param action
-     */
+   */
   ensureOnDispatchLoop(action:() => void) {
     // TODO update when https://github.com/esp/esp-js/issues/86 is implemented
     this.router.runAction(this.modelId, ()=>{
