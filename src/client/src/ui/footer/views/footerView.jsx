@@ -1,6 +1,4 @@
 import React from 'react';
-import { router } from '../../../system';
-import { ViewBase } from '../../common';
 import { FooterModel, ExternalURL } from '../model';
 import {  ServiceStatusLookup } from '../../../services/model';
 import { ServiceStatus } from '../../../system/service';
@@ -9,19 +7,18 @@ import StatusIndicator from './statusIndicator.jsx';
 
 import './footer.scss';
 
-export default class FooterView extends ViewBase {
+export default class FooterView extends React.Component {
   constructor() {
     super();
-    this.state = {
-      model: null
-    };
   }
 
+  static propTypes = {
+    model: React.PropTypes.object.isRequired,
+    router: React.PropTypes.object.isRequired
+  };
+
   render() {
-    let model:FooterModel = this.state.model;
-    if (!model) {
-      return null;
-    }
+    let model:FooterModel = this.props.model;
     let panelClasses = classnames(
       'footer__service-status-panel',
       {
@@ -31,8 +28,7 @@ export default class FooterView extends ViewBase {
     let openfinLogoClassName = classnames(
       'footer__logo',
       {
-        'footer__logo-openfin': model.isRunningInOpenFin,
-        'footer__logo-openfin--hidden': !model.isRunningInOpenFin
+        'footer__logo-openfin': model.isRunningInOpenFin
       }
     );
     let footerClasses = classnames('footer', {
@@ -42,8 +38,8 @@ export default class FooterView extends ViewBase {
         <footer className={footerClasses}>
           <span className='footer__connection-url'>{model.isConnectedToBroker ? `Connected to ${model.connectionUrl} (${model.connectionType})` : 'Disconnected'} </span>
           <span className='footer__logo-container '>
-            <span className='footer__logo footer__logo-adaptive' onClick={() => model.openLink(ExternalURL.adaptiveURL)}></span>
             <span className={openfinLogoClassName} onClick={() => model.openLink(ExternalURL.openfinURL)}></span>
+            <span className='footer__logo footer__logo-adaptive' onClick={() => model.openLink(ExternalURL.adaptiveURL)}></span>
           </span>
           <div className='footer__status-indicator-wrapper'
             onMouseEnter={(e) => this._toggleServiceStatus()}
@@ -60,7 +56,7 @@ export default class FooterView extends ViewBase {
   }
 
   _toggleServiceStatus() {
-    router.publishEvent(this.props.modelId, 'toggleServiceStatus', {});
+    this.props.router.publishEvent(this.props.model.modelId, 'toggleServiceStatus', {});
   };
 
   _renderServices(model:FooterModel) {
